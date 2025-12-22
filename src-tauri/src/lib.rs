@@ -12,6 +12,10 @@ async fn toggle_mini_mode(window: Window, is_mini: bool) {
         window.set_always_on_top(false).unwrap();
         // 恢复大尺寸，例如 800x600
         window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 800.0, height: 600.0 })).unwrap();
+        // 窗口居中
+        window.center().unwrap();
+        // 恢复焦点
+        window.set_focus().unwrap();
     }
 }
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

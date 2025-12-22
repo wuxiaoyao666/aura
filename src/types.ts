@@ -1,4 +1,4 @@
-export type Mode = 'timer' | 'stopwatch'
+export type Mode = 'timer' | 'stopwatch' | 'break'
 
 export interface Task {
   id: number
