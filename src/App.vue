@@ -15,13 +15,12 @@ const isRunning = ref(false)
 const defaultPomodoroTime = 25 * 60
 const timeLeft = ref(defaultPomodoroTime) // 倒计时剩余
 const timeElapsed = ref(0) // 正计时经过
-const estimatedTime = ref(30 * 60) // 预估时间 (用于正计时对比)
+const estimatedTime = ref(30 * 60) // 预估时间 (用于正计时进度条演示)
 
 let timerInterval: number | null = null
 
 // --- 计算属性 ---
 
-// 格式化时间显示 (MM:SS)
 const formatTime = (seconds: number) => {
   const m = Math.floor(seconds / 60)
     .toString()
@@ -30,27 +29,21 @@ const formatTime = (seconds: number) => {
   return `${m}:${s}`
 }
 
-// 当前主显示的时间
 const displayTime = computed(() => {
   return mode.value === 'timer' ? formatTime(timeLeft.value) : formatTime(timeElapsed.value)
 })
 
-// 进度条百分比
 const progressPercentage = computed(() => {
   if (mode.value === 'timer') {
-    // 倒计时：剩余时间越少，进度条越短
     return (timeLeft.value / defaultPomodoroTime) * 100
   } else {
-    // 正计时：经过时间 / 预估时间。如果超时，限制在 100% (或者可以做变色溢出效果)
     const pct = (timeElapsed.value / estimatedTime.value) * 100
     return Math.min(pct, 100)
   }
 })
 
-// 颜色主题
 const themeColor = computed(() => {
-  if (mode.value === 'timer') return 'text-emerald-400' // 绿色代表专注
-  // 正计时：如果超时，变红，否则蓝色
+  if (mode.value === 'timer') return 'text-emerald-400'
   return timeElapsed.value > estimatedTime.value ? 'text-rose-400' : 'text-sky-400'
 })
 
@@ -59,7 +52,7 @@ const progressColor = computed(() => {
   return timeElapsed.value > estimatedTime.value ? 'bg-rose-500' : 'bg-sky-500'
 })
 
-// --- 逻辑控制 ---
+// --- 逻辑控制 (核心修改部分) ---
 
 const toggleTimer = () => {
   if (isRunning.value) {
@@ -70,20 +63,53 @@ const toggleTimer = () => {
 }
 
 const startTimer = () => {
+  if (isRunning.value) return // 防止重复启动
   isRunning.value = true
+
+  // 🚀 核心修复：基于时间戳计算，防止后台变慢
+  const now = Date.now()
+  let endTime = 0 // 倒计时模式：目标结束时间戳
+  let startTime = 0 // 正计时模式：开始时间戳
+
+  if (mode.value === 'timer') {
+    // 倒计时：目标时间 = 当前时间 + 剩余秒数
+    endTime = now + timeLeft.value * 1000
+  } else {
+    // 正计时：开始时间 = 当前时间 - 已经过去的秒数
+    startTime = now - timeElapsed.value * 1000
+  }
+
+  // 使用 setInterval 更新 UI，但数据源自时间戳差值
   timerInterval = setInterval(() => {
+    const currentNow = Date.now()
+
     if (mode.value === 'timer') {
-      if (timeLeft.value > 0) timeLeft.value--
-      else pauseTimer() // 倒计时结束
+      // 倒计时逻辑
+      const remainingMs = endTime - currentNow
+      // 向上取整，避免 0.9秒 显示为 0秒
+      const remainingSec = Math.ceil(remainingMs / 1000)
+
+      if (remainingSec <= 0) {
+        timeLeft.value = 0
+        pauseTimer()
+        // 这里可以加一个结束提醒，比如 invoke('notify')
+      } else {
+        timeLeft.value = remainingSec
+      }
     } else {
-      timeElapsed.value++ // 正计时增加
+      // 正计时逻辑
+      const elapsedMs = currentNow - startTime
+      timeElapsed.value = Math.floor(elapsedMs / 1000)
     }
-  }, 1000)
+  }, 200) // 💡 刷新频率提高到 200ms，让 UI 更跟手，反正计算是精准的
 }
 
 const pauseTimer = () => {
   isRunning.value = false
-  if (timerInterval) clearInterval(timerInterval)
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
 }
 
 const resetTimer = () => {
@@ -98,9 +124,13 @@ const resetTimer = () => {
 const switchMode = (newMode: Mode) => {
   pauseTimer()
   mode.value = newMode
+  if (newMode === 'timer') {
+    timeLeft.value = defaultPomodoroTime
+  } else {
+    timeElapsed.value = 0
+  }
 }
 
-// 切换 Mini 模式 (调用 Rust)
 const toggleMiniMode = async () => {
   isMini.value = !isMini.value
   await invoke('toggle_mini_mode', { isMini: isMini.value })
@@ -117,6 +147,7 @@ onUnmounted(() => {
     :class="{ 'rounded-xl': !isMini }"
   >
     <div
+      v-if="!isMini"
       data-tauri-drag-region
       class="h-8 w-full flex items-center justify-end px-2 cursor-move hover:bg-white/5 transition z-50"
     >
@@ -125,8 +156,11 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <div v-if="isMini" class="flex-1 flex flex-col items-center justify-center -mt-4">
-      <div class="font-mono text-4xl font-bold tracking-tighter drop-shadow-lg" :class="themeColor">
+    <div
+      v-if="isMini"
+      class="flex-1 flex flex-col items-center justify-center relative w-full h-full"
+    >
+      <div class="font-mono text-5xl font-bold tracking-tighter drop-shadow-lg" :class="themeColor">
         {{ displayTime }}
       </div>
       <div class="w-full h-1 bg-slate-800 absolute bottom-0 left-0">
@@ -136,11 +170,23 @@ onUnmounted(() => {
           :style="{ width: `${progressPercentage}%` }"
         ></div>
       </div>
+
       <div
-        class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-slate-900/80 transition-opacity"
+        data-tauri-drag-region
+        class="absolute inset-0 flex items-center justify-center gap-4 opacity-0 hover:opacity-100 bg-slate-900/90 transition-opacity"
       >
-        <button @click="toggleTimer">
-          <component :is="isRunning ? Pause : Play" size="32" class="text-white" />
+        <button
+          @click="toggleTimer"
+          class="p-2 rounded-full hover:bg-white/10 text-white cursor-pointer"
+        >
+          <component :is="isRunning ? Pause : Play" size="24" />
+        </button>
+
+        <button
+          @click="toggleMiniMode"
+          class="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
+        >
+          <Maximize2 size="24" />
         </button>
       </div>
     </div>
