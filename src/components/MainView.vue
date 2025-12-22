@@ -1,24 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { Play, Pause, RotateCcw, Timer, Watch, Plus, X, Clock } from 'lucide-vue-next'
 import {
   displayTime,
-  progressPercentage,
   themeColor,
-  progressColor,
   mode,
   isRunning,
   currentTask,
   tasks,
-  estimatedTime,
   toggleTimer,
   resetTimer,
-  switchMode,
   toggleMode,
   loadTask,
   deleteTask,
   clearCurrentTask,
-  formatTime,
 } from '../store'
 
 const emit = defineEmits(['open-create'])
