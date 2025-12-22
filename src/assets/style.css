@@ -1,0 +1,12 @@
+/* src/style.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 既然你的 App.vue 里用了 bg-slate-900，
+   这里最好加上这个，防止页面加载时有白边 */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #0f172a; /* 对应 slate-900 */
+}
