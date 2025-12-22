@@ -10,12 +10,10 @@ import {
   isRunning,
   isOvertime,
   currentTask,
-  estimatedTime,
   toggleTimer,
   resetTimer,
   toggleMode,
   backToDashboard,
-  formatTime,
   completeTask,
   startBreak,
   timeLeft,
@@ -29,21 +27,26 @@ const handleTakeBreak = () => startBreak(5)
 const handleComplete = () => completeTask()
 
 // ----------------------------------------------------------------
-// 状态文案
+// 状态文案 (彻底清洗：无预计耗时，无废话)
 // ----------------------------------------------------------------
 const statusText = computed(() => {
+  // 1. 秒表模式
   if (mode.value === 'stopwatch') {
-    return isRunning.value ? '正计时进行中...' : '已暂停'
+    return isRunning.value ? '正计时进行中...' : '准备开始'
   }
+
+  // 2. 倒计时模式
   if (isRunning.value) return '保持专注...'
+
+  // 初始状态判断
   const isAtStart = timeLeft.value === timerDuration.value
   return isAtStart ? '准备开始' : '已暂停'
 })
 
 // ----------------------------------------------------------------
-// SVG 圆环参数 (优化版：半径 150，视觉更舒展)
+// SVG 圆环参数
 // ----------------------------------------------------------------
-const radius = 150 // 半径加大：130 -> 150 (直径 300px)
+const radius = 150
 const stroke = 5
 const normalizedRadius = radius - stroke * 2
 const circumference = normalizedRadius * 2 * Math.PI
@@ -128,7 +131,7 @@ const strokeColorClass = computed(() => {
             />
           </svg>
 
-          <div class="absolute inset-0 flex flex-col items-center justify-center z-10">
+          <div class="absolute inset-0 flex items-center justify-center z-10">
             <div
               class="absolute inset-0 rounded-full blur-[60px] opacity-10 transition-all duration-1000"
               :class="[
@@ -147,10 +150,7 @@ const strokeColorClass = computed(() => {
         </div>
 
         <div class="h-6 mb-6 text-slate-500 text-sm transition-all duration-300">
-          <span v-if="mode === 'stopwatch' && !isRunning"
-            >预计耗时: {{ formatTime(estimatedTime) }}</span
-          >
-          <span v-else>{{ statusText }}</span>
+          {{ statusText }}
         </div>
 
         <div class="flex items-center gap-6">

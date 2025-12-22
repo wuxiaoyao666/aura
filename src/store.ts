@@ -1,3 +1,4 @@
+// src/store.ts
 import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { Task, Mode } from './types'
@@ -14,7 +15,7 @@ export const timeLeft = ref(25 * 60)
 export const timeElapsed = ref(0)
 export const timerDuration = ref(25 * 60)
 
-// [新增] 超时模式状态
+// 超时模式状态
 export const isOvertime = ref(false)
 export const overtimeSeconds = ref(0)
 
@@ -120,7 +121,6 @@ export const startTimer = () => {
           if (mode.value === 'break') {
             // 休息结束：不进入超时，直接停止
             pauseTimer()
-            // 这里可以后续加个系统通知
           } else {
             // 专注结束：自动进入超时模式
             isOvertime.value = true
@@ -150,7 +150,6 @@ export const toggleTimer = () => {
 
 // 结束休息，直接开始工作
 export const endBreak = () => {
-  // 如果当前有任务，就恢复该任务的专注；没有则默认专注
   if (currentTask.value) {
     startFocus(currentTask.value)
   } else {
@@ -161,7 +160,6 @@ export const endBreak = () => {
 // 开始休息
 export const startBreak = (minutes: number = 5) => {
   pauseTimer()
-  // 清理专注状态
   isOvertime.value = false
   overtimeSeconds.value = 0
 
@@ -169,7 +167,6 @@ export const startBreak = (minutes: number = 5) => {
   timerDuration.value = minutes * 60
   timeLeft.value = timerDuration.value
 
-  // 自动开始
   startTimer()
 }
 
@@ -209,7 +206,6 @@ export const completeTask = () => {
   const doneId = currentTask.value.id
   tasks.value = tasks.value.filter((t) => t.id !== doneId)
 
-  // 完成任务时，重置超时
   isOvertime.value = false
   overtimeSeconds.value = 0
 
@@ -241,7 +237,21 @@ export const deleteTask = (id: number) => {
   }
 }
 
+// 【关键修复】startFocus: 增加防重判读
 export const startFocus = (task?: Task) => {
+  // 1. 检查是否是同一个任务
+  const isSameTask = task && currentTask.value && task.id === currentTask.value.id
+  // 2. 检查是否都是自由模式（没传任务且当前也没任务）
+  const isSameFreeMode = !task && !currentTask.value
+
+  // 如果是同一个任务，或者都是自由模式 -> 仅跳转视图，不重置状态
+  if (isSameTask || isSameFreeMode) {
+    currentView.value = 'focus'
+    return
+  }
+
+  // --- 以下是开启新任务的逻辑 ---
+
   isOvertime.value = false
   overtimeSeconds.value = 0
 
@@ -257,6 +267,7 @@ export const startFocus = (task?: Task) => {
       timeElapsed.value = 0
     }
 
+    // 只有在【确实开启了新任务】时，才自动进入小窗
     if (!isMini.value) {
       toggleMiniMode()
     }
@@ -267,11 +278,12 @@ export const startFocus = (task?: Task) => {
     resetTimer()
     pauseTimer()
   }
+
   currentView.value = 'focus'
 }
 
 export const backToDashboard = () => {
-  pauseTimer()
+  // 注意：这里不要 pauseTimer()，否则切回列表时任务会暂停，不符合后台运行预期
   currentView.value = 'dashboard'
   if (isMini.value) {
     toggleMiniMode()
