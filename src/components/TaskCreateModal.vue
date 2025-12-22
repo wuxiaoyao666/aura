@@ -24,6 +24,8 @@ const handleCreate = () => {
     mode: newTask.value.mode,
     duration: newTask.value.duration,
     tags: tags,
+    act: 0,
+    est: 0,
   })
 
   emit('close')

@@ -4,6 +4,8 @@ export interface Task {
   id: number
   title: string
   mode: Mode
-  duration: number
+  duration: number // 专注设定时长(分钟) 或 正计时预期时长
   tags: string[]
+  act: number // 实际完成的番茄数 (预留字段)
+  est: number // 预估番茄数 (预留字段)
 }

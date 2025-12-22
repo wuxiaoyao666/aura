@@ -13,8 +13,11 @@ import {
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col items-center justify-center relative w-full h-full">
-    <div class="font-mono text-5xl font-bold tracking-tighter drop-shadow-lg" :class="themeColor">
+  <div class="flex-1 flex flex-col items-center justify-center relative w-full h-full bg-slate-950">
+    <div
+      class="font-mono text-5xl font-bold tracking-tighter drop-shadow-lg select-none pointer-events-none"
+      :class="themeColor"
+    >
       {{ displayTime }}
     </div>
 
@@ -37,9 +40,10 @@ import {
       ></div>
     </div>
 
+    <div data-tauri-drag-region class="absolute inset-0 z-20"></div>
+
     <div
-      data-tauri-drag-region
-      class="absolute inset-0 flex items-center justify-center gap-4 opacity-0 hover:opacity-100 bg-slate-900/90 transition-opacity"
+      class="absolute inset-0 flex items-center justify-center gap-4 z-30 opacity-0 hover:opacity-100 bg-slate-950/90 transition-opacity duration-200"
     >
       <button
         @click="toggleTimer"
@@ -56,9 +60,3 @@ import {
     </div>
   </div>
 </template>
-
-<style scoped>
-.font-mono {
-  font-variant-numeric: tabular-nums;
-}
-</style>
