@@ -150,11 +150,21 @@ export const toggleTimer = () => {
 
 // 结束休息，直接开始工作
 export const endBreak = () => {
+  // 1. 强制切换回之前的模式 (Timer 或 Stopwatch)
   if (currentTask.value) {
-    startFocus(currentTask.value)
+    mode.value = currentTask.value.mode
   } else {
-    startFocus()
+    mode.value = 'timer' // 默认为番茄钟
   }
+
+  // 2. 重置时间 (读取任务原本的时长)
+  resetTimer()
+
+  // 3. 自动开始运行
+  startTimer()
+
+  // 4. 确保切回大窗口的 Focus 视图 (如果在大窗口模式下)
+  currentView.value = 'focus'
 }
 
 // 开始休息

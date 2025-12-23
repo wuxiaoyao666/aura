@@ -16,6 +16,7 @@ import {
   backToDashboard,
   completeTask,
   startBreak,
+  endBreak, // 确保引入了 endBreak
   timeLeft,
   timerDuration,
 } from '../store'
@@ -26,8 +27,19 @@ import {
 const handleTakeBreak = () => startBreak(5)
 const handleComplete = () => completeTask()
 
+// ✨ 新增：主按钮核心交互逻辑
+const handleMainAction = () => {
+  if (mode.value === 'break') {
+    // 休息时点击 -> 结束休息，继续任务
+    endBreak()
+  } else {
+    // 工作时点击 -> 暂停/开始
+    toggleTimer()
+  }
+}
+
 // ----------------------------------------------------------------
-// 状态文案 (彻底清洗：无预计耗时，无废话)
+// 状态文案
 // ----------------------------------------------------------------
 const statusText = computed(() => {
   // 1. 秒表模式
@@ -35,7 +47,12 @@ const statusText = computed(() => {
     return isRunning.value ? '正计时进行中...' : '准备开始'
   }
 
-  // 2. 倒计时模式
+  // 2. 休息模式
+  if (mode.value === 'break') {
+    return '休息中...'
+  }
+
+  // 3. 倒计时模式
   if (isRunning.value) return '保持专注...'
 
   // 初始状态判断
@@ -85,7 +102,14 @@ const strokeColorClass = computed(() => {
           class="mb-6 flex flex-col items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-700"
         >
           <div
-            v-if="currentTask"
+            v-if="mode === 'break'"
+            class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-sm text-indigo-300 shadow-xl"
+          >
+            <Coffee :size="14" class="text-indigo-400" />
+            <span class="font-medium">休息模式</span>
+          </div>
+          <div
+            v-else-if="currentTask"
             class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-sm text-slate-300 shadow-xl"
           >
             <component
@@ -135,7 +159,11 @@ const strokeColorClass = computed(() => {
             <div
               class="absolute inset-0 rounded-full blur-[60px] opacity-10 transition-all duration-1000"
               :class="[
-                mode === 'timer' ? 'bg-emerald-500' : 'bg-sky-500',
+                mode === 'break'
+                  ? 'bg-indigo-500'
+                  : mode === 'timer'
+                    ? 'bg-emerald-500'
+                    : 'bg-sky-500',
                 isRunning ? 'opacity-20 scale-110' : 'opacity-5 scale-100',
               ]"
             ></div>
@@ -163,24 +191,33 @@ const strokeColorClass = computed(() => {
           </button>
 
           <button
+            v-if="mode !== 'break'"
             @click="handleTakeBreak"
             class="p-3 rounded-full text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition active:scale-95 cursor-pointer"
             title="休息一下"
           >
             <Coffee :size="20" />
           </button>
+          <div v-else class="w-[44px]"></div>
 
           <button
-            @click="toggleTimer"
+            @click="handleMainAction"
             class="p-6 rounded-[2rem] transition-all duration-300 shadow-2xl hover:shadow-emerald-500/20 active:scale-95 flex items-center justify-center border border-white/5 cursor-pointer bg-slate-900 group"
             :class="isRunning ? 'ring-2 ring-emerald-500/20' : 'hover:bg-slate-800'"
+            :title="mode === 'break' ? '结束休息' : isRunning ? '暂停' : '开始'"
           >
             <component
-              :is="isRunning ? Pause : Play"
+              :is="mode === 'break' ? Play : isRunning ? Pause : Play"
               :size="36"
               fill="currentColor"
               class="transition-colors duration-300"
-              :class="mode === 'timer' ? 'text-emerald-500' : 'text-sky-500'"
+              :class="
+                mode === 'break'
+                  ? 'text-indigo-400'
+                  : mode === 'timer'
+                    ? 'text-emerald-500'
+                    : 'text-sky-500'
+              "
             />
           </button>
 
