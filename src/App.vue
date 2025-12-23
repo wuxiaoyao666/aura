@@ -1,14 +1,39 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { MonitorPlay } from 'lucide-vue-next'
-// 🔴 关键修复：补上了 currentView 的导入！
 import { isMini, toggleMiniMode, currentView } from './store'
+import type { Task } from './types'
+
 import MiniView from './components/MiniView.vue'
 import TaskListView from './components/TaskListView.vue'
 import FocusTimerView from './components/FocusTimerView.vue'
 import TaskCreateModal from './components/TaskCreateModal.vue'
 
 const showCreateModal = ref(false)
+// 当前正在编辑的任务
+const editingTask = ref<Task | null>(null)
+
+// 打开新建
+const openCreate = () => {
+  // 清空编辑状态
+  editingTask.value = null
+  showCreateModal.value = true
+}
+
+// 打开编辑
+const openEdit = (task: Task) => {
+  // 设置当前编辑的任务
+  editingTask.value = task
+  showCreateModal.value = true
+}
+
+// 关闭模态框
+const closeModal = () => {
+  showCreateModal.value = false
+  setTimeout(() => {
+    editingTask.value = null
+  }, 300) // 等动画结束再清空
+}
 </script>
 
 <template>
@@ -36,18 +61,18 @@ const showCreateModal = ref(false)
       <transition name="fade" mode="out-in">
         <component
           :is="currentView === 'dashboard' ? TaskListView : FocusTimerView"
-          @open-create="showCreateModal = true"
+          @open-create="openCreate"
+          @edit-task="openEdit"
           class="pt-8"
         />
       </transition>
     </template>
 
     <transition name="fade">
-      <TaskCreateModal v-if="showCreateModal" @close="showCreateModal = false" />
+      <TaskCreateModal v-if="showCreateModal" :editTask="editingTask" @close="closeModal" />
     </transition>
   </div>
 </template>
-
 <style>
 .fade-enter-active,
 .fade-leave-active {

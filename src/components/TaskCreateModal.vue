@@ -1,32 +1,57 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { X, Timer, Watch } from 'lucide-vue-next'
-import { addTask } from '../store'
-import type { Mode } from '../types'
+import { addTask, updateTask } from '../store'
+import type { Mode, Task } from '../types'
+
+const props = defineProps<{
+  editTask?: Task | null
+}>()
 
 const emit = defineEmits(['close'])
 
-const newTask = ref({
+const form = ref({
   title: '',
   mode: 'timer' as Mode,
   duration: 25,
   tagInput: '',
 })
 
-const handleCreate = () => {
-  if (!newTask.value.title.trim()) return
+onMounted(() => {
+  if (props.editTask) {
+    form.value = {
+      title: props.editTask.title,
+      mode: props.editTask.mode,
+      duration: props.editTask.duration,
+      tagInput: props.editTask.tags ? props.editTask.tags.join(' ') : '',
+    }
+  }
+})
 
-  const tags = newTask.value.tagInput.split(/[,， ]+/).filter((t) => t.trim())
+const handleSubmit = () => {
+  if (!form.value.title.trim()) return
 
-  addTask({
-    id: Date.now(),
-    title: newTask.value.title,
-    mode: newTask.value.mode,
-    duration: newTask.value.duration,
-    tags: tags,
-    act: 0,
-    est: 0,
-  })
+  const tags = form.value.tagInput.split(/[,， ]+/).filter((t) => t.trim())
+
+  if (props.editTask) {
+    updateTask({
+      ...props.editTask,
+      title: form.value.title,
+      mode: form.value.mode,
+      duration: form.value.duration,
+      tags: tags,
+    })
+  } else {
+    addTask({
+      id: Date.now(),
+      title: form.value.title,
+      mode: form.value.mode,
+      duration: form.value.duration,
+      tags: tags,
+      act: 0,
+      est: 0,
+    })
+  }
 
   emit('close')
 }
@@ -40,7 +65,7 @@ const handleCreate = () => {
       class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-200"
     >
       <div class="flex justify-between items-center">
-        <h3 class="text-slate-200 font-semibold">新建任务</h3>
+        <h3 class="text-slate-200 font-semibold">{{ editTask ? '编辑任务' : '新建任务' }}</h3>
         <button @click="$emit('close')" class="text-slate-500 hover:text-white cursor-pointer">
           <X :size="18" />
         </button>
@@ -50,11 +75,12 @@ const handleCreate = () => {
         <div>
           <label class="text-xs text-slate-500 block mb-1">任务名称</label>
           <input
-            v-model="newTask.title"
+            v-model="form.title"
             type="text"
             placeholder="例如：阅读《三体》"
             class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none transition"
             autoFocus
+            @keydown.enter="handleSubmit"
           />
         </div>
 
@@ -62,10 +88,10 @@ const handleCreate = () => {
           <label class="text-xs text-slate-500 block mb-1">模式选择</label>
           <div class="grid grid-cols-2 gap-2">
             <button
-              @click="newTask.mode = 'timer'"
+              @click="form.mode = 'timer'"
               class="flex items-center justify-center gap-2 py-2 rounded-lg border text-sm transition cursor-pointer"
               :class="
-                newTask.mode === 'timer'
+                form.mode === 'timer'
                   ? 'bg-emerald-600 border-emerald-600 text-white'
                   : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-600'
               "
@@ -73,10 +99,10 @@ const handleCreate = () => {
               <Timer :size="14" /> 专注计时
             </button>
             <button
-              @click="newTask.mode = 'stopwatch'"
+              @click="form.mode = 'stopwatch'"
               class="flex items-center justify-center gap-2 py-2 rounded-lg border text-sm transition cursor-pointer"
               :class="
-                newTask.mode === 'stopwatch'
+                form.mode === 'stopwatch'
                   ? 'bg-sky-600 border-sky-600 text-white'
                   : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-600'
               "
@@ -86,34 +112,44 @@ const handleCreate = () => {
           </div>
         </div>
 
-        <div v-if="newTask.mode === 'timer'">
+        <div v-if="form.mode === 'timer'">
           <label class="text-xs text-slate-500 block mb-1">专注时长 (分钟)</label>
           <input
-            v-model="newTask.duration"
+            v-model="form.duration"
             type="number"
             min="1"
             max="180"
             class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none transition"
+            @keydown.enter="handleSubmit"
           />
         </div>
 
         <div>
           <label class="text-xs text-slate-500 block mb-1">标签 (空格分隔)</label>
           <input
-            v-model="newTask.tagInput"
+            v-model="form.tagInput"
             type="text"
             placeholder="阅读 学习"
             class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none transition"
+            @keydown.enter="handleSubmit"
           />
         </div>
       </div>
 
-      <button
-        @click="handleCreate"
-        class="w-full bg-slate-100 hover:bg-white text-slate-900 font-bold py-2.5 rounded-lg transition active:scale-95 cursor-pointer"
-      >
-        创建任务
-      </button>
+      <div class="grid grid-cols-3 gap-3 pt-2">
+        <button
+          @click="$emit('close')"
+          class="col-span-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2.5 rounded-lg transition active:scale-95 cursor-pointer"
+        >
+          取消
+        </button>
+        <button
+          @click="handleSubmit"
+          class="col-span-2 bg-slate-100 hover:bg-white text-slate-900 font-bold py-2.5 rounded-lg transition active:scale-95 cursor-pointer"
+        >
+          {{ editTask ? '保存修改' : '立即创建' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>

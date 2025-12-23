@@ -235,6 +235,15 @@ export const addTask = (task: Task) => {
   tasks.value.push(task)
 }
 
+// 更新任务
+export const updateTask = (updatedTask: Task) => {
+  const index = tasks.value.findIndex((t) => t.id === updatedTask.id)
+  if (index !== -1) {
+    // 保持原来的 id 和创建时间，更新内容
+    tasks.value[index] = { ...tasks.value[index], ...updatedTask }
+  }
+}
+
 export const clearCurrentTask = () => {
   currentTask.value = null
   resetTimer()
