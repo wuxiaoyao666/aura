@@ -8,4 +8,5 @@ export interface Task {
   tags: string[]
   act: number // 实际完成的番茄数 (预留字段)
   est: number // 预估番茄数 (预留字段)
+  breakDuration: number // 预设休息时长
 }

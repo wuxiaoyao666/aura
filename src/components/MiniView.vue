@@ -82,7 +82,7 @@ import {
 
       <button
         v-if="mode !== 'break'"
-        @click="() => startBreak(5)"
+        @click="() => startBreak(currentTask?.breakDuration || 5)"
         class="p-2 rounded-full hover:bg-indigo-600 text-indigo-400 hover:text-white cursor-pointer pointer-events-auto transition-colors"
         title="休息 5 分钟"
       >

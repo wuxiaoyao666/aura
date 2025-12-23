@@ -121,6 +121,21 @@ export const startTimer = () => {
           if (mode.value === 'break') {
             // 休息结束：不进入超时，直接停止
             pauseTimer()
+
+            // 2. 切回之前的模式
+            if (currentTask.value) {
+              mode.value = currentTask.value.mode
+              if (currentTask.value.mode === 'timer') {
+                timeLeft.value = currentTask.value.duration * 60
+                timerDuration.value = currentTask.value.duration * 60
+              } else {
+                timeElapsed.value = 0
+              }
+            } else {
+              mode.value = 'timer'
+              timeLeft.value = 25 * 60
+              timerDuration.value = 25 * 60
+            }
           } else {
             // 专注结束：自动进入超时模式
             isOvertime.value = true

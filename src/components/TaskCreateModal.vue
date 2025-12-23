@@ -14,6 +14,7 @@ const form = ref({
   title: '',
   mode: 'timer' as Mode,
   duration: 25,
+  breakDuration: 5,
   tagInput: '',
 })
 
@@ -23,6 +24,7 @@ onMounted(() => {
       title: props.editTask.title,
       mode: props.editTask.mode,
       duration: props.editTask.duration,
+      breakDuration: props.editTask.breakDuration || 5,
       tagInput: props.editTask.tags ? props.editTask.tags.join(' ') : '',
     }
   }
@@ -39,6 +41,7 @@ const handleSubmit = () => {
       title: form.value.title,
       mode: form.value.mode,
       duration: form.value.duration,
+      breakDuration: form.value.breakDuration,
       tags: tags,
     })
   } else {
@@ -47,6 +50,7 @@ const handleSubmit = () => {
       title: form.value.title,
       mode: form.value.mode,
       duration: form.value.duration,
+      breakDuration: form.value.breakDuration,
       tags: tags,
       act: 0,
       est: 0,
@@ -120,6 +124,18 @@ const handleSubmit = () => {
             min="1"
             max="180"
             class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none transition"
+            @keydown.enter="handleSubmit"
+          />
+        </div>
+
+        <div>
+          <label class="text-xs text-slate-500 block mb-1">休息时长 (分钟)</label>
+          <input
+            v-model="form.breakDuration"
+            type="number"
+            min="1"
+            max="60"
+            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none transition"
             @keydown.enter="handleSubmit"
           />
         </div>

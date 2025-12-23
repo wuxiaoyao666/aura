@@ -24,7 +24,7 @@ import {
 // ----------------------------------------------------------------
 // 动作包装
 // ----------------------------------------------------------------
-const handleTakeBreak = () => startBreak(5)
+  const handleTakeBreak = () => startBreak(currentTask.value?.breakDuration || 5)
 const handleComplete = () => completeTask()
 
 // ✨ 新增：主按钮核心交互逻辑
