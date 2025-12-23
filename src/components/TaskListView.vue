@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-// 拖拽组件
-import { VueDraggable } from 'vue-draggable-plus'
 import {
   Play,
   Plus,
@@ -11,20 +9,13 @@ import {
   LayoutList,
   Timer,
   Watch,
-  ArrowDown,
   Activity,
   Maximize2,
   Pencil,
-  GripVertical,
 } from 'lucide-vue-next'
 
-// 直接引入 currentTask，这是核心状态
 import { tasks, deleteTask, startFocus, currentTask } from '../store'
 
-const emit = defineEmits(['open-create', 'edit-task'])
-
-// 计算当前正在运行的任务ID
-// 只要 currentTask 有值，它的 ID 就是“正在进行”的 ID
 const activeTaskId = computed(() => currentTask.value?.id)
 </script>
 
@@ -39,111 +30,103 @@ const activeTaskId = computed(() => currentTask.value?.id)
     </div>
 
     <div class="flex-1 overflow-y-auto px-6 pb-24 space-y-3 scrollbar-hide relative">
-      <VueDraggable v-model="tasks" :animation="150" handle=".drag-handle" class="space-y-3">
+      <div
+        v-for="task in tasks"
+        :key="task.id"
+        class="group rounded-xl p-4 transition-all cursor-default flex items-center justify-between border relative overflow-hidden bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
+        :class="[
+          task.id === activeTaskId
+            ? 'bg-emerald-900/20 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)] z-10'
+            : '',
+        ]"
+      >
         <div
-          v-for="task in tasks"
-          :key="task.id"
-          class="group rounded-xl p-4 transition-all cursor-default flex items-center justify-between border relative overflow-hidden bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
-          :class="[
-            task.id === activeTaskId
-              ? 'bg-emerald-900/20 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)] z-10'
-              : '',
-          ]"
-        >
+          v-if="task.id === activeTaskId"
+          class="absolute inset-0 bg-emerald-500/5 animate-pulse pointer-events-none"
+        ></div>
+
+        <div class="flex items-center gap-4 min-w-0 z-10">
           <div
-            v-if="task.id === activeTaskId"
-            class="absolute inset-0 bg-emerald-500/5 animate-pulse pointer-events-none"
-          ></div>
-
-          <div class="flex items-center gap-3 min-w-0 z-10">
-            <div
-              class="drag-handle text-slate-600 hover:text-slate-400 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <GripVertical :size="16" />
-            </div>
-
-            <div
-              class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors"
-              :class="
-                task.id === activeTaskId
-                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/40'
-                  : task.mode === 'timer'
-                    ? 'bg-emerald-500/10 text-emerald-500'
-                    : 'bg-sky-500/10 text-sky-500'
-              "
-            >
-              <Activity v-if="task.id === activeTaskId" :size="20" class="animate-pulse" />
-              <component v-else :is="task.mode === 'timer' ? Timer : Watch" :size="20" />
-            </div>
-
-            <div class="flex flex-col min-w-0">
-              <div class="flex items-center gap-2">
-                <span
-                  class="text-base font-medium truncate"
-                  :class="task.id === activeTaskId ? 'text-emerald-400' : 'text-slate-200'"
-                >
-                  {{ task.title }}
-                </span>
-                <span
-                  v-if="task.id === activeTaskId"
-                  class="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 animate-pulse"
-                >
-                  进行中
-                </span>
-              </div>
-
-              <div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
-                <span v-if="task.mode === 'timer'" class="flex items-center gap-1">
-                  <Clock :size="12" /> {{ task.duration }} 分钟
-                </span>
-                <span v-else class="flex items-center gap-1"> <Watch :size="12" /> 正计时 </span>
-                <span v-if="task.tags && task.tags.length" class="flex gap-1">
-                  <span
-                    v-for="tag in task.tags"
-                    :key="tag"
-                    class="bg-slate-800 px-1.5 rounded text-slate-400"
-                    >#{{ tag }}</span
-                  >
-                </span>
-              </div>
-            </div>
+            class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors"
+            :class="
+              task.id === activeTaskId
+                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/40'
+                : task.mode === 'timer'
+                  ? 'bg-emerald-500/10 text-emerald-500'
+                  : 'bg-sky-500/10 text-sky-500'
+            "
+          >
+            <Activity v-if="task.id === activeTaskId" :size="20" class="animate-pulse" />
+            <component :is="task.mode === 'timer' ? Timer : Watch" v-else :size="20" />
           </div>
 
-          <div class="flex items-center gap-1 z-10">
-            <button
-              @click="startFocus(task)"
-              class="p-2 rounded-lg transition-colors cursor-pointer"
-              :class="
-                task.id === activeTaskId
-                  ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-900/50'
-                  : 'bg-slate-800 hover:bg-emerald-600 text-emerald-500 hover:text-white'
-              "
-              :title="task.id === activeTaskId ? '回到专注页面' : '开始此任务'"
-            >
-              <Maximize2 v-if="task.id === activeTaskId" :size="18" />
-              <Play v-else :size="18" fill="currentColor" class="opacity-90" />
-            </button>
+          <div class="flex flex-col min-w-0">
+            <div class="flex items-center gap-2">
+              <span
+                class="text-base font-medium truncate"
+                :class="task.id === activeTaskId ? 'text-emerald-400' : 'text-slate-200'"
+              >
+                {{ task.title }}
+              </span>
+              <span
+                v-if="task.id === activeTaskId"
+                class="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 animate-pulse"
+              >
+                进行中
+              </span>
+            </div>
 
-            <button
-              v-if="task.id !== activeTaskId"
-              @click="$emit('edit-task', task)"
-              class="p-2 text-slate-600 hover:text-sky-400 hover:bg-sky-950/30 rounded-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-              title="编辑任务"
-            >
-              <Pencil :size="18" />
-            </button>
-
-            <button
-              v-if="task.id !== activeTaskId"
-              @click="deleteTask(task.id)"
-              class="p-2 text-slate-600 hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-              title="删除任务"
-            >
-              <Trash2 :size="18" />
-            </button>
+            <div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+              <span class="flex items-center gap-1" v-if="task.mode === 'timer'">
+                <Clock :size="12" /> {{ task.duration }} 分钟
+              </span>
+              <span class="flex items-center gap-1" v-else> <Watch :size="12" /> 正计时 </span>
+              <span class="flex gap-1" v-if="task.tags && task.tags.length">
+                <span
+                  v-for="tag in task.tags"
+                  :key="tag"
+                  class="bg-slate-800 px-1.5 rounded text-slate-400"
+                  >#{{ tag }}</span
+                >
+              </span>
+            </div>
           </div>
         </div>
-      </VueDraggable>
+
+        <div class="flex items-center gap-1 z-10">
+          <button
+            @click="startFocus(task)"
+            class="p-2 rounded-lg transition-colors cursor-pointer"
+            :class="
+              task.id === activeTaskId
+                ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-900/50'
+                : 'bg-slate-800 hover:bg-emerald-600 text-emerald-500 hover:text-white'
+            "
+            :title="task.id === activeTaskId ? '回到专注页面' : '开始此任务'"
+          >
+            <Maximize2 v-if="task.id === activeTaskId" :size="18" />
+            <Play fill="currentColor" class="opacity-90" v-else :size="18" />
+          </button>
+
+          <button
+            v-if="task.id !== activeTaskId"
+            @click="$emit('edit-task', task)"
+            class="p-2 text-slate-600 hover:text-sky-400 hover:bg-sky-950/30 rounded-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+            title="编辑任务"
+          >
+            <Pencil :size="18" />
+          </button>
+
+          <button
+            v-if="task.id !== activeTaskId"
+            @click="deleteTask(task.id)"
+            class="p-2 text-slate-600 hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+            title="删除任务"
+          >
+            <Trash2 :size="18" />
+          </button>
+        </div>
+      </div>
 
       <div
         v-if="tasks.length === 0"
