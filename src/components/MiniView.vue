@@ -12,7 +12,7 @@ import {
   toggleMiniMode,
   completeTask,
   startBreak,
-  endBreak, // 引入新动作
+  endBreak,
 } from '../store'
 </script>
 

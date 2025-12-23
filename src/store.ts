@@ -202,15 +202,18 @@ export const resetTimer = () => {
 
   if (mode.value === 'break') {
     timeLeft.value = 5 * 60
+    timerDuration.value = 5 * 60
   } else if (currentTask.value) {
     if (currentTask.value.mode === 'timer') {
       timeLeft.value = currentTask.value.duration * 60
+      timerDuration.value = currentTask.value.duration * 60
     } else {
       timeElapsed.value = 0
     }
   } else {
     timeLeft.value = 25 * 60
     timeElapsed.value = 0
+    timerDuration.value = 25 * 60
   }
 }
 
@@ -238,6 +241,10 @@ export const completeTask = () => {
   if (nextTask) {
     startFocus(nextTask)
   } else {
+
+    // 回归默认专注状态
+    mode.value = 'timer'
+
     clearCurrentTask()
     if (isMini.value) {
       toggleMiniMode()
