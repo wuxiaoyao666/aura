@@ -18,7 +18,7 @@ import {
 
 <template>
   <div
-    class="flex-1 flex flex-col items-center justify-center relative w-full h-full bg-slate-950 overflow-hidden"
+    class="flex-1 flex flex-col items-center justify-center relative w-full h-full bg-slate-950 overflow-hidden rounded-2xl border border-white/10 shadow-2xl"
   >
     <div class="z-10 flex flex-col items-center gap-1 max-w-[90%] pointer-events-none select-none">
       <div

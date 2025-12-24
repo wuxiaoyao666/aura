@@ -1,6 +1,12 @@
 // src/store.ts
 import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+// 系统通知
+import {
+  isPermissionGranted,
+  requestPermission,
+  sendNotification,
+} from '@tauri-apps/plugin-notification'
 import type { Task, Mode } from './types'
 
 // --- 视图状态 ---
@@ -25,6 +31,18 @@ export const currentTask = ref<Task | null>(null)
 export const estimatedTime = ref(30 * 60)
 
 let timerInterval: number | null = null
+
+// 发送系统通知
+const sendNotify = async (title: string, body: string) => {
+  let permissionGranted = await isPermissionGranted()
+  if (!permissionGranted) {
+    const permission = await requestPermission()
+    permissionGranted = permission === 'granted'
+  }
+  if (permissionGranted) {
+    sendNotification({ title, body })
+  }
+}
 
 // --- 计算属性 ---
 export const formatTime = (seconds: number) => {
@@ -119,7 +137,12 @@ export const startTimer = () => {
           timeLeft.value = 0
 
           if (mode.value === 'break') {
-            // 休息结束：不进入超时，直接停止
+            // 休息结束
+
+            // 发送系统通知
+            sendNotify('休息结束', '电量已充满，准备开始工作吧！')
+
+            // 停止计时
             pauseTimer()
 
             // 2. 切回之前的模式
@@ -137,6 +160,9 @@ export const startTimer = () => {
               timerDuration.value = 25 * 60
             }
           } else {
+            // 发送通知
+            sendNotify('专注完成', '棒极了！要不要休息一下？')
+
             // 专注结束：自动进入超时模式
             isOvertime.value = true
             startTime = currentNow
