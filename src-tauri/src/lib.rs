@@ -1,4 +1,13 @@
+use crate::constant::constants;
+use crate::migration::Migrator;
+use sea_orm::{Database, DatabaseConnection, DbErr};
+use sea_orm_migration::{MigratorTrait, SchemaManager};
+use std::fs;
+use std::fs::File;
 use tauri::Window;
+
+pub mod constant;
+mod migration;
 
 #[tauri::command]
 async fn toggle_mini_mode(window: Window, is_mini: bool) {
@@ -36,4 +45,25 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![toggle_mini_mode])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+async fn init_db() -> Result<DatabaseConnection, DbErr> {
+    let db_path = constants::get_db_path();
+
+    // 确保目录存在
+    if let Some(parent) = db_path.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent).expect("创建目录失败");
+        }
+    }
+
+    // File::create(&db_path).expect("创建数据库文件失败");
+    let db_url = format!("sqlite://{}", db_path.display());
+    let db = Database::connect(&db_url).await?;
+
+    // 初始化数据表
+    let schema_manager = SchemaManager::new(&db);
+    Migrator::up(&db, None).await?;
+    assert!(schema_manager.has_table("tasks").await?);
+    Ok(db)
 }

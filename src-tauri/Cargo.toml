@@ -23,4 +23,8 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-notification = "2"
+sea-orm = { version = "1.1.19", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros"] }
+dirs = "6.0.0"
+sea-orm-migration = { version = "1.1.19", features = ["sqlx-sqlite"] }
+tokio = { version = "1.49.0", features = ["full"] }
 
