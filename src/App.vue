@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { MonitorPlay } from 'lucide-vue-next'
-import { isMini, toggleMiniMode, currentView } from './store'
+import { isMini, toggleMiniMode, currentView, loadTasks } from './store'
 import type { Task } from './types'
 
 import MiniView from './components/MiniView.vue'
@@ -34,6 +34,11 @@ const closeModal = () => {
     editingTask.value = null
   }, 300) // 等动画结束再清空
 }
+
+onMounted(() => {
+  // 启动时从数据库读数据
+  loadTasks()
+})
 </script>
 
 <template>

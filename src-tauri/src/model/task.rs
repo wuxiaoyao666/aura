@@ -11,6 +11,10 @@ pub struct Model {
     pub mode: String,  // "timer" | "stopwatch"
     pub is_completed: bool,
     pub break_duration: i32,
+    #[sea_orm(column_type = "Json")]
+    pub tags: serde_json::Value,
+    pub act: i32,
+    pub est: i32,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
 }

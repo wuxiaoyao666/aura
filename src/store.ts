@@ -1,5 +1,5 @@
 // src/store.ts
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 // 系统通知
 import {
@@ -7,7 +7,7 @@ import {
   requestPermission,
   sendNotification,
 } from '@tauri-apps/plugin-notification'
-import type { Task, Mode } from './types'
+import type { Mode, Task } from './types'
 
 // --- 视图状态 ---
 export type ViewState = 'dashboard' | 'focus'
@@ -31,6 +31,15 @@ export const currentTask = ref<Task | null>(null)
 export const estimatedTime = ref(30 * 60)
 
 let timerInterval: number | null = null
+
+// 初始化数据
+export const loadTasks = async () => {
+  try {
+    tasks.value = await invoke<Task[]>('get_tasks', { excludeCompleted: true })
+  } catch (e) {
+    console.error('加载任务失败:', e)
+  }
+}
 
 // 发送系统通知
 const sendNotify = async (title: string, body: string) => {
@@ -254,41 +263,85 @@ export const toggleMode = () => {
 
 // --- 业务流程 Actions ---
 
-export const completeTask = () => {
+export const completeTask = async () => {
   if (!currentTask.value) return
 
   const doneId = currentTask.value.id
-  tasks.value = tasks.value.filter((t) => t.id !== doneId)
+  try {
+    await invoke('complete_task_in_db', { id: doneId })
 
-  isOvertime.value = false
-  overtimeSeconds.value = 0
-
-  const nextTask = tasks.value[0]
-  if (nextTask) {
-    startFocus(nextTask)
-  } else {
-
-    // 回归默认专注状态
-    mode.value = 'timer'
-
-    clearCurrentTask()
-    if (isMini.value) {
-      toggleMiniMode()
+    const taskIndex = tasks.value.findIndex((t) => t.id === doneId)
+    if (taskIndex !== -1) {
+      tasks.value[taskIndex].isCompleted = true
     }
-    currentView.value = 'dashboard'
+
+    isOvertime.value = false
+    overtimeSeconds.value = 0
+
+    const nextTask = tasks.value.find((t) => !t.isCompleted)
+    if (nextTask) {
+      startFocus(nextTask)
+    } else {
+      // 回归默认专注状态
+      mode.value = 'timer'
+
+      clearCurrentTask()
+      if (isMini.value) {
+        toggleMiniMode()
+      }
+      currentView.value = 'dashboard'
+    }
+  } catch (e) {
+    console.error('完成任务失败', e)
   }
 }
 
-export const addTask = (task: Task) => {
-  tasks.value.push(task)
+export const activeTasks = computed(() => {
+  return tasks.value.filter((t) => !t.isCompleted)
+})
+
+export const completedTasks = computed(() => {
+  return tasks.value.filter((t) => t.isCompleted)
+})
+
+export const addTask = async (task: Task) => {
+  try {
+    // 调用 Rust 保存到数据库
+    const newId = await invoke<number>('create_task', {
+      title: task.title,
+      duration: task.duration,
+      mode: task.mode,
+      breakDuration: task.breakDuration,
+      tags: task.tags,
+      est: task.est,
+    })
+
+    // 更新前端状态
+    tasks.value.unshift({ ...task, id: newId })
+  } catch (e) {
+    console.error('保存任务失败:', e)
+  }
 }
 
 // 更新任务
-export const updateTask = (updatedTask: Task) => {
-  const index = tasks.value.findIndex((t) => t.id === updatedTask.id)
-  if (index !== -1) {
-    // 保持原来的 id 和创建时间，更新内容
-    tasks.value[index] = { ...tasks.value[index], ...updatedTask }
+export const updateTask = async (updatedTask: Task) => {
+  try {
+    await invoke('update_task_in_db', {
+      id: updatedTask.id,
+      title: updatedTask.title,
+      duration: updatedTask.duration,
+      mode: updatedTask.mode,
+      breakDuration: updatedTask.breakDuration,
+      tags: updatedTask.tags,
+      est: updatedTask.est,
+    })
+    const index = tasks.value.findIndex((t) => t.id === updatedTask.id)
+    if (index !== -1) {
+      // 保持原来的 id 和创建时间，更新内容
+      tasks.value[index] = { ...tasks.value[index], ...updatedTask }
+    }
+  } catch (e) {
+    console.error('更新任务失败:', e)
   }
 }
 
@@ -297,10 +350,16 @@ export const clearCurrentTask = () => {
   resetTimer()
 }
 
-export const deleteTask = (id: number) => {
-  tasks.value = tasks.value.filter((t) => t.id !== id)
-  if (currentTask.value?.id === id) {
-    clearCurrentTask()
+export const deleteTask = async (id: number) => {
+  try {
+    await invoke('delete_task_in_db', { id })
+
+    tasks.value = tasks.value.filter((t) => t.id !== id)
+    if (currentTask.value?.id === id) {
+      clearCurrentTask()
+    }
+  } catch (e) {
+    console.error('删除任务失败:', e)
   }
 }
 

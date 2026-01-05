@@ -3,5 +3,8 @@
 
 #[tokio::main]
 async fn main() {
-    aura_lib::run()
+    let db = aura_lib::init_db()
+        .await
+        .expect("Failed to initialize database");
+    aura_lib::run(db)
 }

@@ -27,8 +27,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Task::Mode).string().not_null())
                     .col(ColumnDef::new(Task::IsCompleted).boolean().not_null())
                     .col(ColumnDef::new(Task::BreakDuration).integer().not_null())
-                    .col(ColumnDef::new(Task::CreateAt).date_time().not_null())
-                    .col(ColumnDef::new(Task::UpdateAt).date_time().not_null())
+                    .col(ColumnDef::new(Task::Tags).string()) // SQLite存JSON通常用String/Text
+                    .col(ColumnDef::new(Task::Act).integer().not_null().default(0))
+                    .col(ColumnDef::new(Task::Est).integer().not_null().default(1))
+                    .col(ColumnDef::new(Task::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(Task::UpdatedAt).date_time().not_null())
                     .to_owned(),
             )
             .await
@@ -49,6 +52,9 @@ pub enum Task {
     Mode,
     IsCompleted,
     BreakDuration,
-    CreateAt,
-    UpdateAt
+    Tags,
+    Act,
+    Est,
+    CreatedAt,
+    UpdatedAt
 }
