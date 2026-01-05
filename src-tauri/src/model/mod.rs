@@ -1,7 +1,8 @@
+use sea_orm::DbConn;
+use tokio::sync::OnceCell;
+use crate::constant::constants;
 
 pub mod task;
-pub mod prelude;
-
 pub static DB_CONN: OnceCell<DbConn> = OnceCell::const_new();
 
 pub async fn start_db() {

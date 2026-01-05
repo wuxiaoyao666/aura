@@ -3,11 +3,11 @@ use crate::migration::Migrator;
 use sea_orm::{Database, DatabaseConnection, DbErr};
 use sea_orm_migration::{MigratorTrait, SchemaManager};
 use std::fs;
-use std::fs::File;
 use tauri::Window;
 
 pub mod constant;
 mod migration;
+mod model;
 
 #[tauri::command]
 async fn toggle_mini_mode(window: Window, is_mini: bool) {
