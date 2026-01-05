@@ -33,8 +33,12 @@ const activeTaskId = computed(() => currentTask.value?.id)
       <div
         v-for="task in tasks"
         :key="task.id"
-        class="group rounded-xl p-4 transition-all cursor-default flex items-center justify-between border relative overflow-hidden bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
+        class="group rounded-xl p-4 transition-all cursor-default flex items-center justify-between border relative overflow-hidden"
         :class="[
+          task.isCompleted
+            ? 'bg-slate-900/20 border-slate-800/50 opacity-60 hover:opacity-100'
+            : 'bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900',
+
           task.id === activeTaskId
             ? 'bg-emerald-900/20 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)] z-10'
             : '',
@@ -48,13 +52,15 @@ const activeTaskId = computed(() => currentTask.value?.id)
         <div class="flex items-center gap-4 min-w-0 z-10">
           <div
             class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors"
-            :class="
-              task.id === activeTaskId
-                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/40'
-                : task.mode === 'timer'
-                  ? 'bg-emerald-500/10 text-emerald-500'
-                  : 'bg-sky-500/10 text-sky-500'
-            "
+            :class="[
+              task.isCompleted
+                ? 'bg-slate-800 text-slate-600'
+                : task.id === activeTaskId
+                  ? 'bg-emerald-500 text-white'
+                  : task.mode === 'timer'
+                    ? 'bg-emerald-500/10 text-emerald-500'
+                    : 'bg-sky-500/10 text-sky-500',
+            ]"
           >
             <Activity v-if="task.id === activeTaskId" :size="20" class="animate-pulse" />
             <component :is="task.mode === 'timer' ? Timer : Watch" v-else :size="20" />
@@ -63,11 +69,15 @@ const activeTaskId = computed(() => currentTask.value?.id)
           <div class="flex flex-col min-w-0">
             <div class="flex items-center gap-2">
               <span
-                class="text-base font-medium truncate"
-                :class="task.id === activeTaskId ? 'text-emerald-400' : 'text-slate-200'"
+                class="text-base font-medium truncate transition-all"
+                :class="[
+                  task.isCompleted ? 'line-through text-slate-500' : '',
+                  task.id === activeTaskId ? 'text-emerald-400' : 'text-slate-200',
+                ]"
               >
                 {{ task.title }}
               </span>
+
               <span
                 v-if="task.id === activeTaskId"
                 class="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 animate-pulse"

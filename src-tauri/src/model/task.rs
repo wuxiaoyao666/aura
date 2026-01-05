@@ -2,6 +2,8 @@ use sea_orm::entity::prelude::*;
 use serde::Serialize;
 
 #[derive(Clone, Debug, PartialEq, Serialize, DeriveEntityModel, Eq)]
+// 驼峰命名转下划线
+#[serde(rename_all = "camelCase")]
 #[sea_orm(table_name = "task")]
 pub struct Model {
     #[sea_orm(primary_key)]

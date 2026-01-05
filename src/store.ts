@@ -35,7 +35,7 @@ let timerInterval: number | null = null
 // 初始化数据
 export const loadTasks = async () => {
   try {
-    tasks.value = await invoke<Task[]>('get_tasks', { excludeCompleted: true })
+    tasks.value = await invoke<Task[]>('get_all_tasks')
   } catch (e) {
     console.error('加载任务失败:', e)
   }
@@ -367,7 +367,7 @@ export const deleteTask = async (id: number) => {
 export const startFocus = (task?: Task) => {
   // 1. 检查是否是同一个任务
   const isSameTask = task && currentTask.value && task.id === currentTask.value.id
-  // 2. 检查是否都是自由模式（没传任务且当前也没任务）
+  // 2. 检查是否都是自由模式
   const isSameFreeMode = !task && !currentTask.value
 
   // 如果是同一个任务，或者都是自由模式 -> 仅跳转视图，不重置状态
@@ -375,8 +375,6 @@ export const startFocus = (task?: Task) => {
     currentView.value = 'focus'
     return
   }
-
-  // --- 以下是开启新任务的逻辑 ---
 
   isOvertime.value = false
   overtimeSeconds.value = 0

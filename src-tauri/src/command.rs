@@ -2,7 +2,7 @@ use crate::model::prelude::Task;
 use crate::model::task;
 use sea_orm::sqlx::types::chrono;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, Set,
+    ActiveModelTrait, DatabaseConnection, EntityTrait, QueryOrder, Set,
 };
 use tauri::{State, Window};
 
@@ -48,18 +48,9 @@ pub async fn create_task(
 #[tauri::command]
 pub async fn get_all_tasks(
     db: State<'_, DatabaseConnection>,
-    exclude_completed: bool, // 是否过滤数据
 ) -> Result<Vec<task::Model>, String> {
-    // 构建查询器
-    let mut query = task::Entity::find();
-
-    // 如果前端说“我不要已完成的”，后端就把它过滤掉
-    if exclude_completed {
-        query = query.filter(task::Column::IsCompleted.eq(false));
-    }
-
-    // 按创建时间倒序
-    let tasks = query
+    let tasks = task::Entity::find()
+        .order_by_asc(task::Column::IsCompleted)
         .order_by_desc(task::Column::CreatedAt)
         .all(db.inner())
         .await
