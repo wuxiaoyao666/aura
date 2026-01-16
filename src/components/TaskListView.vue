@@ -161,6 +161,12 @@ const activeTaskId = computed(() => currentTask.value?.id)
         {{ activeTaskId ? '回到专注' : '自由专注' }}
       </button>
 
+      <div
+        class="text-xs text-slate-600 font-mono select-none hover:text-slate-500 transition-colors"
+      >
+        Designed by <span class="text-emerald-600/50">Xiaoyao</span>
+      </div>
+
       <button
         @click="$emit('open-create')"
         class="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/40 px-6 py-3 rounded-xl flex items-center gap-2 font-bold transition active:scale-95 cursor-pointer"
