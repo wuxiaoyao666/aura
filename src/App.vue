@@ -43,6 +43,7 @@ onMounted(() => {
 
 <template>
   <div
+    @contextmenu.prevent
     class="h-screen w-screen overflow-hidden bg-slate-950 text-slate-200 select-none flex flex-col relative transition-all duration-300"
     :class="!isMini ? 'rounded-xl border border-slate-800' : ''"
   >
