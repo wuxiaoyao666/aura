@@ -81,7 +81,7 @@ const handleSubmit = () => {
           <input
             v-model="form.title"
             type="text"
-            placeholder="例如：阅读《三体》"
+            placeholder="例如：阅读《xxx》"
             class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none transition"
             autoFocus
             @keydown.enter="handleSubmit"
