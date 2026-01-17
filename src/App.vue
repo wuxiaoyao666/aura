@@ -44,42 +44,57 @@ onMounted(() => {
 <template>
   <div
     @contextmenu.prevent
-    class="h-screen w-screen overflow-hidden bg-slate-950 text-slate-200 select-none flex flex-col relative transition-all duration-300"
-    :class="!isMini ? 'rounded-xl border border-slate-800' : ''"
+    class="h-screen w-screen overflow-hidden bg-transparent text-slate-200 select-none flex flex-col relative font-sans"
   >
-    <div
-      v-if="!isMini"
-      data-tauri-drag-region
-      class="absolute top-0 left-0 right-0 h-8 flex items-center justify-end px-3 z-50 hover:bg-white/5 transition"
-    >
-      <button
-        @click="toggleMiniMode"
-        class="p-1 text-slate-500 hover:text-white transition cursor-pointer"
-        title="迷你模式"
+    <transition name="zoom" mode="out-in">
+      <MiniView v-if="isMini" />
+
+      <div
+        v-else
+        class="flex-1 flex flex-col relative bg-slate-950 rounded-[32px] border border-slate-800 overflow-hidden shadow-2xl"
       >
-        <MonitorPlay :size="16" />
-      </button>
-    </div>
+        <div
+          data-tauri-drag-region
+          class="absolute top-0 left-0 right-0 h-10 flex items-center justify-end px-5 z-50 hover:bg-white/5 transition"
+        >
+          <button
+            @click="toggleMiniMode"
+            class="p-2 text-slate-500 hover:text-white transition cursor-pointer hover:bg-white/10 rounded-full"
+            title="迷你模式"
+          >
+            <MonitorPlay :size="18" />
+          </button>
+        </div>
 
-    <MiniView v-if="isMini" />
+        <transition name="fade" mode="out-in">
+          <component
+            :is="currentView === 'dashboard' ? TaskListView : FocusTimerView"
+            @open-create="openCreate"
+            @edit-task="openEdit"
+            class="pt-8"
+          />
+        </transition>
 
-    <template v-else>
-      <transition name="fade" mode="out-in">
-        <component
-          :is="currentView === 'dashboard' ? TaskListView : FocusTimerView"
-          @open-create="openCreate"
-          @edit-task="openEdit"
-          class="pt-8"
-        />
-      </transition>
-    </template>
-
-    <transition name="fade">
-      <TaskCreateModal v-if="showCreateModal" :editTask="editingTask" @close="closeModal" />
+        <transition name="fade">
+          <TaskCreateModal v-if="showCreateModal" :editTask="editingTask" @close="closeModal" />
+        </transition>
+      </div>
     </transition>
   </div>
 </template>
+
 <style>
+.zoom-enter-active,
+.zoom-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.zoom-enter-from,
+.zoom-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -88,6 +103,7 @@ onMounted(() => {
 .fade-leave-to {
   opacity: 0;
 }
+
 .font-mono {
   font-variant-numeric: tabular-nums;
 }
