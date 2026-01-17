@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
-body {
+/*。全局背景透明 */
+:root, html, body {
     margin: 0;
     padding: 0;
-    background-color: #0f172a;
+    background-color: transparent !important;
+    -webkit-font-smoothing: antialiased;
 }
