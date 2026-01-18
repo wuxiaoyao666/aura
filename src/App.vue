@@ -51,7 +51,7 @@ onMounted(() => {
 
       <div
         v-else
-        class="flex-1 flex flex-col relative bg-slate-950 rounded-[32px] border border-slate-800 overflow-hidden shadow-2xl"
+        class="flex-1 flex flex-col relative bg-slate-950 rounded-[32px] border border-slate-800 overflow-hidden"
       >
         <div
           data-tauri-drag-region
