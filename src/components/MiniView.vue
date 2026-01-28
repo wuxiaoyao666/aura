@@ -18,7 +18,7 @@ import {
 
 <template>
   <div
-    class="flex-1 flex flex-col items-center justify-center relative w-full h-full bg-slate-950 overflow-hidden rounded-2xl border border-white/10 shadow-2xl"
+    class="group flex-1 flex flex-col items-center justify-center relative w-full h-full bg-slate-950 overflow-hidden rounded-2xl border border-white/10 shadow-2xl"
   >
     <div class="z-10 flex flex-col items-center gap-1 max-w-[90%] pointer-events-none select-none">
       <div
@@ -51,7 +51,7 @@ import {
     <div data-tauri-drag-region class="absolute inset-0 z-20"></div>
 
     <div
-      class="absolute inset-0 flex items-center justify-center gap-3 z-30 opacity-0 hover:opacity-100 bg-slate-950/80 backdrop-blur-sm transition-all duration-200 pointer-events-none"
+      class="absolute inset-0 flex items-center justify-center gap-3 z-30 opacity-0 group-hover:opacity-100 bg-slate-950/80 backdrop-blur-sm transition-all duration-200 pointer-events-none"
     >
       <button
         v-if="mode !== 'break'"
